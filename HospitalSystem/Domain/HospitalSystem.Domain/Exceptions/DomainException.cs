@@ -1,5 +1,4 @@
-﻿// Exceptions/DomainException.cs
-namespace Hospital.Domain.Exceptions;
+﻿namespace Hospital.Domain.Exceptions;
 
 public abstract class DomainException : Exception
 {

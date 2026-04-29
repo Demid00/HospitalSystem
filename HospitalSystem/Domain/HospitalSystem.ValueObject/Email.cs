@@ -1,10 +1,6 @@
-﻿// Email.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Validators;
+﻿using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Validators;
 
-namespace Hospital.ValueObjects;
+namespace Hospital.Domain.ValueObjects;
 
-public class Email : ValueObject<string>
-{
-    public Email(string value) : base(new EmailValidator(), value) { }
-}
+public class Email(string value) : ValueObject<string>(new EmailValidator(), value);

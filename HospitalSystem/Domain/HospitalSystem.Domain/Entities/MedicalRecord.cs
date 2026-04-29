@@ -1,14 +1,17 @@
-﻿// Entities/MedicalRecord.cs
+﻿using Hospital.Domain.Base;
 using Hospital.Domain.Exceptions;
-using Hospital.Domain.Base;
+using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-public class MedicalRecord : Base.Entity<Guid>
+/// <summary>
+/// Represents a medical record for an appointment.
+/// </summary>
+public class MedicalRecord : Entity<Guid>
 {
-    private readonly List<PrescribedProcedure> _prescribedProcedures = new();
+    private readonly List<PrescribedProcedure> _prescribedProcedures = [];
 
-    public Guid AppointmentId { get; private set; }
+    public Guid AppointmentId { get; }
     public Appointment Appointment { get; private set; } = null!;
     public string Complaints { get; private set; }
     public string Diagnosis { get; private set; }
@@ -21,13 +24,9 @@ public class MedicalRecord : Base.Entity<Guid>
 
     private MedicalRecord() { }
 
-    public MedicalRecord(Appointment appointment, string complaints, string diagnosis,
-                         string? treatment = null, string? conclusion = null)
-        : this(Guid.NewGuid(), appointment, complaints, diagnosis, treatment, conclusion) { }
-
-    protected MedicalRecord(Guid id, Appointment appointment, string complaints, string diagnosis,
-                            string? treatment, string? conclusion)
-        : base(id)
+    internal MedicalRecord(Appointment appointment, string complaints, string diagnosis,
+                           string? treatment = null, string? conclusion = null)
+        : base(Guid.NewGuid())
     {
         Appointment = appointment ?? throw new ArgumentNullValueException(nameof(appointment));
         AppointmentId = appointment.Id;
@@ -48,11 +47,10 @@ public class MedicalRecord : Base.Entity<Guid>
             Treatment = treatment;
         if (!string.IsNullOrWhiteSpace(conclusion))
             Conclusion = conclusion;
-
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddPrescribedProcedure(Procedure procedure, string? notes = null)
+    public void AddProcedure(Procedure procedure, string? notes = null)
     {
         var prescribed = new PrescribedProcedure(this, procedure, notes);
         _prescribedProcedures.Add(prescribed);

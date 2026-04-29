@@ -1,9 +1,9 @@
-﻿namespace Hospital.ValueObjects.Exceptions;
+﻿namespace HospitalSystem.Domain.ValueObjects.Exceptions;
 
 public class InvalidPhoneNumberFormatException : FormatException
 {
-    public string PhoneNumber { get; }
-
     public InvalidPhoneNumberFormatException(string phoneNumber)
-        : base($"Phone number '{phoneNumber}' has invalid format.") => PhoneNumber = phoneNumber;
+        : base($"Phone number '{phoneNumber}' has invalid format.")
+    {
+    }
 }

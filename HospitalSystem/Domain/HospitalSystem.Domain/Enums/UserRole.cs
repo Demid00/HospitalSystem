@@ -1,5 +1,4 @@
-﻿// Enums/UserRole.cs
-namespace Hospital.Domain.Enums;
+﻿namespace Hospital.Domain.Enums;
 
 public enum UserRole
 {

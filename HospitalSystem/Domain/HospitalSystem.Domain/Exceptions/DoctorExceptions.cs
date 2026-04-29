@@ -1,31 +1,18 @@
-﻿// Exceptions/DoctorExceptions.cs
+﻿using Hospital.Domain.Entities;
+
 namespace Hospital.Domain.Exceptions;
 
-public class DoctorAlreadyDeactivatedException : DomainException
-{
-    public Guid DoctorId { get; }
+public class DoctorNotFoundException(Guid doctorId)
+    : DomainException($"Doctor with ID {doctorId} not found.");
 
-    public DoctorAlreadyDeactivatedException(Guid doctorId)
-        : base($"Doctor {doctorId} is already deactivated.") => DoctorId = doctorId;
-}
+public class DoctorNotAvailableException(Guid doctorId, DateTime dateTime)
+    : DomainException($"Doctor {doctorId} is not available at {dateTime}.");
 
-public class DoctorNotFoundException : DomainException
-{
-    public Guid DoctorId { get; }
+public class DoctorAlreadyDeactivatedException(Guid doctorId)
+    : DomainException($"Doctor {doctorId} is already deactivated.");
 
-    public DoctorNotFoundException(Guid doctorId)
-        : base($"Doctor with ID {doctorId} was not found.") => DoctorId = doctorId;
-}
+public class ScheduleOverlapException(DayOfWeek day, TimeOnly start, TimeOnly end)
+    : DomainException($"Schedule overlap on {day} between {start} and {end}.");
 
-public class ScheduleDoctorMismatchException : DomainException
-{
-    public Guid ScheduleId { get; }
-    public Guid DoctorId { get; }
-
-    public ScheduleDoctorMismatchException(Guid scheduleId, Guid doctorId)
-        : base($"Schedule {scheduleId} does not belong to doctor {doctorId}.")
-    {
-        ScheduleId = scheduleId;
-        DoctorId = doctorId;
-    }
-}
+public class InvalidScheduleTimeException(TimeOnly start, TimeOnly end)
+    : DomainException($"Start time {start} must be less than end time {end}.");

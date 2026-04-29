@@ -1,8 +1,7 @@
-﻿// Validators/CabinetNumberValidator.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Exceptions;
+﻿using Hospital.Domain.ValueObjects.Base;
+using HospitalSystem.Domain.ValueObjects.Exceptions;
 
-namespace Hospital.ValueObjects.Validators;
+namespace Hospital.Domain.ValueObjects.Validators;
 
 public class CabinetNumberValidator : IValidator<int>
 {
@@ -12,8 +11,8 @@ public class CabinetNumberValidator : IValidator<int>
     public void Validate(int value)
     {
         if (value < MIN_VALUE)
-            throw new ArgumentMinValueException(nameof(value), value, MIN_VALUE);
+            throw new CabinetNumberMinValueException(value, MIN_VALUE);
         if (value > MAX_VALUE)
-            throw new ArgumentMaxValueException(nameof(value), value, MAX_VALUE);
+            throw new CabinetNumberMaxValueException(value, MAX_VALUE);
     }
 }

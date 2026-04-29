@@ -1,9 +1,8 @@
-﻿// Validators/PhoneNumberValidator.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Exceptions;
+﻿using Hospital.Domain.ValueObjects.Base;
+using HospitalSystem.Domain.ValueObjects.Exceptions;
 using System.Text.RegularExpressions;
 
-namespace Hospital.ValueObjects.Validators;
+namespace Hospital.Domain.ValueObjects.Validators;
 
 public class PhoneNumberValidator : IValidator<string>
 {
@@ -17,9 +16,7 @@ public class PhoneNumberValidator : IValidator<string>
             throw new ArgumentNullOrWhiteSpaceException(nameof(value));
 
         var cleanNumber = Regex.Replace(value, @"[\s\-\(\)]", "");
-        if (cleanNumber.Length < 10 || cleanNumber.Length > 12)
-            throw new InvalidPhoneNumberFormatException(value);
-        if (!PhoneRegex.IsMatch(value))
+        if (cleanNumber.Length < 10 || cleanNumber.Length > 12 || !PhoneRegex.IsMatch(value))
             throw new InvalidPhoneNumberFormatException(value);
     }
 }

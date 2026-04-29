@@ -1,14 +1,12 @@
-﻿// Base/Entity.cs
-namespace Hospital.Domain.Base;
+﻿namespace Hospital.Domain.Base;
 
-public abstract class Entity<TId> where TId : struct, IEquatable<TId>
+/// <summary>
+/// Represents an entity in the system.
+/// </summary>
+/// <typeparam name="TId">The type of the entity's ID.</typeparam>
+public abstract class Entity<TId>(TId id) where TId : struct, IEquatable<TId>
 {
-    public TId Id { get; }
-
-    protected Entity(TId id)
-    {
-        Id = id;
-    }
+    public TId Id { get; } = id;
 
     protected Entity() : this(default!) { }
 
@@ -25,9 +23,6 @@ public abstract class Entity<TId> where TId : struct, IEquatable<TId>
 
     public override int GetHashCode() => Id.GetHashCode();
 
-    public static bool operator ==(Entity<TId>? left, Entity<TId>? right)
-        => Equals(left, right);
-
-    public static bool operator !=(Entity<TId>? left, Entity<TId>? right)
-        => !(left == right);
+    public static bool operator ==(Entity<TId>? left, Entity<TId>? right) => Equals(left, right);
+    public static bool operator !=(Entity<TId>? left, Entity<TId>? right) => !(left == right);
 }

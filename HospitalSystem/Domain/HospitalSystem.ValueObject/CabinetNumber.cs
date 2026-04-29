@@ -1,10 +1,6 @@
-﻿// CabinetNumber.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Validators;
+﻿using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Validators;
 
-namespace Hospital.ValueObjects;
+namespace Hospital.Domain.ValueObjects;
 
-public class CabinetNumber : ValueObject<int>
-{
-    public CabinetNumber(int value) : base(new CabinetNumberValidator(), value) { }
-}
+public class CabinetNumber(int value) : ValueObject<int>(new CabinetNumberValidator(), value);

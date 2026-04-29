@@ -1,98 +1,84 @@
-﻿// Entities/Appointment.cs
+﻿using Hospital.Domain.Base;
 using Hospital.Domain.Enums;
 using Hospital.Domain.Exceptions;
-using Hospital.ValueObjects;
-using Hospital.Domain.Base;
+using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-public class Appointment : Base.Entity<Guid>
+/// <summary>
+/// Represents an appointment between a patient and a doctor.
+/// </summary>
+public class Appointment : Entity<Guid>
 {
-    public Guid PatientId { get; private set; }
+    public Guid PatientId { get; }
     public Patient Patient { get; private set; } = null!;
-    public Guid DoctorId { get; private set; }
+    public Guid DoctorId { get; }
     public Doctor Doctor { get; private set; } = null!;
-    public DateTime AppointmentDateTime { get; private set; }
+    public DateTime DateTime { get; private set; }
     public AppointmentStatus Status { get; private set; }
-    public Money Price { get; private set; }
+    public Money Price { get; }
     public DateTime CreatedAt { get; }
     public DateTime? CompletedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
     public string? CancellationReason { get; private set; }
 
-    public MedicalRecord? MedicalRecord { get; private set; }
     public Payment? Payment { get; private set; }
+    public MedicalRecord? MedicalRecord { get; private set; }
 
     private Appointment() { }
 
-    public Appointment(Patient patient, Doctor doctor, DateTime appointmentDateTime, Money price)
-        : this(Guid.NewGuid(), patient, doctor, appointmentDateTime, price) { }
-
-    protected Appointment(Guid id, Patient patient, Doctor doctor, DateTime appointmentDateTime, Money price)
-        : base(id)
+    internal Appointment(Patient patient, Doctor doctor, DateTime dateTime, Money price)
+        : base(Guid.NewGuid())
     {
         Patient = patient ?? throw new ArgumentNullValueException(nameof(patient));
         PatientId = patient.Id;
         Doctor = doctor ?? throw new ArgumentNullValueException(nameof(doctor));
         DoctorId = doctor.Id;
-        AppointmentDateTime = appointmentDateTime;
-        Status = AppointmentStatus.Booked;
+        DateTime = dateTime;
         Price = price ?? throw new ArgumentNullValueException(nameof(price));
+        Status = AppointmentStatus.Booked;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Cancel(string? reason = null)
+    internal bool SetCancel(string? reason = null)
     {
         if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCancelledException(Id, Status);
+            throw new AppointmentCannotBeCancelledException(Id, Status.ToString());
 
         Status = AppointmentStatus.Cancelled;
         CancelledAt = DateTime.UtcNow;
         CancellationReason = reason;
+        return true;
     }
 
-    public void Complete()
+    internal bool SetComplete()
     {
         if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCompletedException(Id, Status);
+            throw new AppointmentCannotBeCompletedException(Id, Status.ToString());
 
         Status = AppointmentStatus.Completed;
         CompletedAt = DateTime.UtcNow;
+        return true;
     }
 
-    public void MarkAsNoShow()
-    {
-        if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCancelledException(Id, Status);
-
-        Status = AppointmentStatus.NoShow;
-    }
-
-    public void AddMedicalRecord(MedicalRecord record)
-    {
-        if (MedicalRecord != null)
-            throw new MedicalRecordAlreadyExistsException(Id);
-
-        MedicalRecord = record ?? throw new ArgumentNullValueException(nameof(record));
-        Doctor.AddMedicalRecord(record);
-    }
-
-    public void AddPayment(Payment payment)
+    internal Payment AddPayment(Money amount, string transactionId)
     {
         if (Payment != null)
-            throw new PaymentAlreadyExistsException(Id);
+            throw new InvalidOperationException($"Payment already exists for appointment {Id}");
 
-        Payment = payment ?? throw new ArgumentNullValueException(nameof(payment));
+        var payment = new Payment(this, amount, transactionId);
+        Payment = payment;
+        return payment;
     }
 
-    public void Reschedule(DateTime newDateTime)
+    internal MedicalRecord AddMedicalRecord(string complaints, string diagnosis,
+                                            string? treatment = null, string? conclusion = null)
     {
-        if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCancelledException(Id, Status);
+        if (MedicalRecord != null)
+            throw new InvalidOperationException($"Medical record already exists for appointment {Id}");
 
-        if (!Doctor.IsAvailableAt(newDateTime))
-            throw new AppointmentTimeUnavailableException(DoctorId, newDateTime);
-
-        AppointmentDateTime = newDateTime;
+        var record = new MedicalRecord(this, complaints, diagnosis, treatment, conclusion);
+        MedicalRecord = record;
+        return record;
     }
 }

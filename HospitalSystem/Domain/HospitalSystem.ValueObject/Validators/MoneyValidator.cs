@@ -1,21 +1,22 @@
-﻿// Validators/MoneyValidator.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Exceptions;
+﻿using Hospital.Domain.ValueObjects.Base;
+using HospitalSystem.Domain.ValueObjects.Exceptions;
 
-namespace Hospital.ValueObjects.Validators;
+namespace Hospital.Domain.ValueObjects.Validators;
 
 public class MoneyValidator : IValidator<decimal>
 {
-    public static decimal MIN_AMOUNT => 0;
-    public static decimal MAX_AMOUNT => 1_000_000;
-
     public void Validate(decimal value)
     {
-        if (value < MIN_AMOUNT)
-            throw new ArgumentMinValueException(nameof(value), value, MIN_AMOUNT);
-        if (value > MAX_AMOUNT)
-            throw new ArgumentMaxValueException(nameof(value), value, MAX_AMOUNT);
-        if (decimal.Round(value, 2) != value)
-            throw new InvalidMoneyPrecisionException(value);
+        if (value <= 0)
+            throw new MoneyAmountNonPositiveException(value);
+        if (!IsValidAmount(value))
+            throw new MoneyAmountHasMoreThanTwoDecimalPlacesException(value);
+    }
+
+    private static bool IsValidAmount(decimal value)
+    {
+        value = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        var remainder = value * 100 - (int)(value * 100);
+        return remainder == 0m;
     }
 }

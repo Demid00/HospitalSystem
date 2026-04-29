@@ -1,7 +1,18 @@
-﻿namespace Hospital.ValueObjects.Exceptions;
+﻿namespace HospitalSystem.Domain.ValueObjects.Exceptions;
 
-public class ArgumentNullOrWhiteSpaceException : ArgumentNullException
+/// <summary>
+/// The exception that is thrown when one of the string arguments is null, 
+/// empty or consists only of white-space characters.
+/// </summary>
+public class ArgumentNullOrWhiteSpaceException : ArgumentException
 {
     public ArgumentNullOrWhiteSpaceException(string paramName)
-        : base(paramName, $"The \"{paramName}\" mustn't be null, empty or consists only of white-space characters.") { }
+        : base($"Argument \"{paramName}\" value is null, empty or consists only of white-space characters.", paramName)
+    {
+    }
+
+    public ArgumentNullOrWhiteSpaceException(string paramName, string message)
+        : base(message, paramName)
+    {
+    }
 }

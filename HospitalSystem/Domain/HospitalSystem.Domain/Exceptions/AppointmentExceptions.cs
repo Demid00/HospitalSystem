@@ -1,58 +1,24 @@
-﻿// Exceptions/AppointmentExceptions.cs
-using Hospital.Domain.Enums;
+﻿using Hospital.Domain.Entities;
 
 namespace Hospital.Domain.Exceptions;
 
-public class AppointmentCannotBeCancelledException : DomainException
-{
-    public Guid AppointmentId { get; }
-    public AppointmentStatus CurrentStatus { get; }
+public class AppointmentNotFoundException(Guid appointmentId)
+    : DomainException($"Appointment {appointmentId} not found.");
 
-    public AppointmentCannotBeCancelledException(Guid appointmentId, AppointmentStatus status)
-        : base($"Appointment {appointmentId} cannot be cancelled because its status is {status}.")
-    {
-        AppointmentId = appointmentId;
-        CurrentStatus = status;
-    }
-}
+public class AppointmentAlreadyExistsException(DateTime dateTime, Guid doctorId)
+    : DomainException($"Appointment already exists for doctor {doctorId} at {dateTime}.");
 
-public class AppointmentCannotBeCompletedException : DomainException
-{
-    public Guid AppointmentId { get; }
-    public AppointmentStatus CurrentStatus { get; }
+public class AppointmentCannotBeCancelledException(Guid appointmentId, string status)
+    : DomainException($"Appointment {appointmentId} cannot be cancelled because status is {status}.");
 
-    public AppointmentCannotBeCompletedException(Guid appointmentId, AppointmentStatus status)
-        : base($"Appointment {appointmentId} cannot be completed because its status is {status}.")
-    {
-        AppointmentId = appointmentId;
-        CurrentStatus = status;
-    }
-}
+public class AppointmentCannotBeCompletedException(Guid appointmentId, string status)
+    : DomainException($"Appointment {appointmentId} cannot be completed because status is {status}.");
 
-public class AppointmentTimeUnavailableException : DomainException
-{
-    public DateTime RequestedTime { get; }
-    public Guid DoctorId { get; }
+public class CannotBookAppointmentInPastException()
+    : DomainException("Cannot book appointment in the past.");
 
-    public AppointmentTimeUnavailableException(Guid doctorId, DateTime requestedTime)
-        : base($"Doctor {doctorId} is not available at {requestedTime}.")
-    {
-        DoctorId = doctorId;
-        RequestedTime = requestedTime;
-    }
-}
+public class CannotRescheduleAppointmentInPastException()
+    : DomainException("Cannot reschedule appointment to the past.");
 
-public class AppointmentAlreadyExistsException : DomainException
-{
-    public Guid PatientId { get; }
-    public Guid DoctorId { get; }
-    public DateTime DateTime { get; }
-
-    public AppointmentAlreadyExistsException(Guid patientId, Guid doctorId, DateTime dateTime)
-        : base($"Appointment already exists for patient {patientId} with doctor {doctorId} at {dateTime}.")
-    {
-        PatientId = patientId;
-        DoctorId = doctorId;
-        DateTime = dateTime;
-    }
-}
+public class AppointmentDoesNotBelongToPatientException(Guid appointmentId, Guid patientId)
+    : DomainException($"Appointment {appointmentId} does not belong to patient {patientId}.");

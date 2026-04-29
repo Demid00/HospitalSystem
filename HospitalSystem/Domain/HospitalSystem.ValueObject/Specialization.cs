@@ -1,10 +1,6 @@
-﻿// Specialization.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Validators;
+﻿using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Validators;
 
-namespace Hospital.ValueObjects;
+namespace Hospital.Domain.ValueObjects;
 
-public class Specialization : ValueObject<string>
-{
-    public Specialization(string value) : base(new SpecializationValidator(), value) { }
-}
+public class Specialization(string value) : ValueObject<string>(new SpecializationValidator(), value);

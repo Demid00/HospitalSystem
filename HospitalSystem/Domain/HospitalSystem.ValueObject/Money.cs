@@ -1,32 +1,18 @@
-﻿// Money.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Validators;
-using Hospital.ValueObjects.Exceptions;
+﻿using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Validators;
 
-namespace Hospital.ValueObjects;
+namespace Hospital.Domain.ValueObjects;
 
-public class Money : ValueObject<decimal>
+public class Money(decimal amountInRub) : ValueObject<decimal>(
+    new MoneyValidator(),
+    Math.Round(amountInRub, 2, MidpointRounding.AwayFromZero))
 {
-    public string Currency { get; } = "RUB";
+    public static Money operator +(Money m1, Money m2) => new(m1.Value + m2.Value);
+    public static Money operator -(Money m1, Money m2) => new(m1.Value - m2.Value);
+    public static bool operator >(Money m1, Money m2) => m1.Value > m2.Value;
+    public static bool operator <(Money m1, Money m2) => m1.Value < m2.Value;
+    public static bool operator >=(Money m1, Money m2) => m1.Value >= m2.Value;
+    public static bool operator <=(Money m1, Money m2) => m1.Value <= m2.Value;
 
-    public Money(decimal amount) : base(new MoneyValidator(), amount) { }
-
-    public Money Add(Money other)
-    {
-        return new Money(Value + other.Value);
-    }
-
-    public Money Subtract(Money other)
-    {
-        if (other.Value > Value)
-            throw new InsufficientFundsException(other.Value, Value);
-        return new Money(Value - other.Value);
-    }
-
-    public Money Multiply(int multiplier)
-    {
-        if (multiplier < 0)
-            throw new ArgumentException("Multiplier cannot be negative", nameof(multiplier));
-        return new Money(Value * multiplier);
-    }
+    public override string ToString() => $"{Value:F2} RUB";
 }

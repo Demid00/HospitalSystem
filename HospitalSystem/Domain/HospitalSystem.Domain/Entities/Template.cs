@@ -1,11 +1,15 @@
-﻿// Entities/Template.cs
+﻿using Hospital.Domain.Base;
 using Hospital.Domain.Exceptions;
+using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-public class Template : Base.Entity<Guid>
+/// <summary>
+/// Represents a template for medical conclusions.
+/// </summary>
+public class Template : Entity<Guid>
 {
-    public Guid DoctorId { get; private set; }
+    public Guid DoctorId { get; }
     public Doctor Doctor { get; private set; } = null!;
     public string Name { get; private set; }
     public string Content { get; private set; }
@@ -15,11 +19,8 @@ public class Template : Base.Entity<Guid>
 
     private Template() { }
 
-    public Template(Doctor doctor, string name, string content)
-        : this(Guid.NewGuid(), doctor, name, content) { }
-
-    protected Template(Guid id, Doctor doctor, string name, string content)
-        : base(id)
+    internal Template(Doctor doctor, string name, string content)
+        : base(Guid.NewGuid())
     {
         Doctor = doctor ?? throw new ArgumentNullValueException(nameof(doctor));
         DoctorId = doctor.Id;
@@ -36,23 +37,15 @@ public class Template : Base.Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Deactivate()
-    {
-        IsActive = false;
-    }
-
-    public void Activate()
-    {
-        IsActive = true;
-    }
-
-    public string Render(params (string placeholder, string value)[] replacements)
+    public string Render(Dictionary<string, string> replacements)
     {
         var result = Content;
-        foreach (var (placeholder, value) in replacements)
+        foreach (var (key, value) in replacements)
         {
-            result = result.Replace($"{{{{{placeholder}}}}}", value);
+            result = result.Replace($"{{{{{key}}}}}", value);
         }
         return result;
     }
+
+    public void Deactivate() => IsActive = false;
 }

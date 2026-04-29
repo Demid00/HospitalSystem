@@ -1,118 +1,129 @@
-﻿// Entities/Doctor.cs
+﻿using Hospital.Domain.Base;
 using Hospital.Domain.Exceptions;
-using Hospital.ValueObjects;
-using Hospital.Domain.Base;
-
+using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-public class Doctor : Base.Entity<Guid>
+/// <summary>
+/// Represents a doctor at the hospital.
+/// </summary>
+public class Doctor : Entity<Guid>
 {
-    private readonly List<Schedule> _schedules = new();
-    private readonly List<Appointment> _appointments = new();
-    private readonly List<MedicalRecord> _medicalRecords = new();
-    private readonly List<Template> _templates = new();
-    private readonly List<Salary> _salaries = new();
-    private readonly List<Review> _reviews = new();
+    private readonly List<Schedule> _schedules = [];
+    private readonly List<Review> _reviews = [];
+    private readonly List<Template> _templates = [];
+    private readonly List<Appointment> _appointments = [];
 
-    public Guid UserId { get; private set; }
-    public User User { get; private set; } = null!;
-    public Specialization Specialization { get; private set; }
+    public FullName Name { get; }
+    public Email Email { get; }
+    public PhoneNumber PhoneNumber { get; }
+    public Specialization Specialization { get; }
     public CabinetNumber CabinetNumber { get; private set; }
     public Money ConsultationPrice { get; private set; }
     public string? Description { get; private set; }
     public bool IsActive { get; private set; }
+    public DateTime CreatedAt { get; }
 
     public IReadOnlyCollection<Schedule> Schedules => _schedules.AsReadOnly();
-    public IReadOnlyCollection<Appointment> Appointments => _appointments.AsReadOnly();
-    public IReadOnlyCollection<MedicalRecord> MedicalRecords => _medicalRecords.AsReadOnly();
-    public IReadOnlyCollection<Template> Templates => _templates.AsReadOnly();
-    public IReadOnlyCollection<Salary> Salaries => _salaries.AsReadOnly();
     public IReadOnlyCollection<Review> Reviews => _reviews.AsReadOnly();
+    public IReadOnlyCollection<Template> Templates => _templates.AsReadOnly();
+    public IReadOnlyCollection<Appointment> Appointments => _appointments.AsReadOnly();
+
+    public double AverageRating => _reviews.Any() ? _reviews.Average(r => r.Rating) : 0;
 
     private Doctor() { }
 
-    public Doctor(User user, Specialization specialization, CabinetNumber cabinetNumber,
+    public Doctor(FullName name, Email email, PhoneNumber phoneNumber,
+                  Specialization specialization, CabinetNumber cabinetNumber,
                   Money consultationPrice, string? description = null)
-        : this(Guid.NewGuid(), user, specialization, cabinetNumber, consultationPrice, description) { }
-
-    protected Doctor(Guid id, User user, Specialization specialization, CabinetNumber cabinetNumber,
-                     Money consultationPrice, string? description)
-        : base(id)
+        : base(Guid.NewGuid())
     {
-        User = user ?? throw new ArgumentNullValueException(nameof(user));
-        UserId = user.Id;
+        Name = name ?? throw new ArgumentNullValueException(nameof(name));
+        Email = email ?? throw new ArgumentNullValueException(nameof(email));
+        PhoneNumber = phoneNumber ?? throw new ArgumentNullValueException(nameof(phoneNumber));
         Specialization = specialization ?? throw new ArgumentNullValueException(nameof(specialization));
         CabinetNumber = cabinetNumber ?? throw new ArgumentNullValueException(nameof(cabinetNumber));
         ConsultationPrice = consultationPrice ?? throw new ArgumentNullValueException(nameof(consultationPrice));
         Description = description;
         IsActive = true;
+        CreatedAt = DateTime.UtcNow;
     }
 
-    public void AddSchedule(Schedule schedule)
+    /// <summary>
+    /// Adds a schedule for the doctor.
+    /// </summary>
+    public void AddSchedule(DayOfWeek weekday, TimeOnly startTime, TimeOnly endTime)
     {
-        if (schedule.DoctorId != Id)
-            throw new ScheduleDoctorMismatchException(schedule.Id, Id);
+        if (startTime >= endTime)
+            throw new InvalidScheduleTimeException(startTime, endTime);
+        if (_schedules.Any(s => s.Weekday == weekday && s.IsActive))
+            throw new ScheduleOverlapException(weekday, startTime, endTime);
 
-        if (_schedules.Any(s => s.Weekday == schedule.Weekday && s.IsActive))
-            throw new ScheduleOverlapException(schedule.Weekday, schedule.StartTime, schedule.EndTime);
-
+        var schedule = new Schedule(this, weekday, startTime, endTime);
         _schedules.Add(schedule);
     }
 
-    public void UpdatePrice(Money newPrice)
+    /// <summary>
+    /// Checks if the doctor is available at a specific time.
+    /// </summary>
+    public bool IsAvailableAt(DateTime dateTime)
+    {
+        var schedule = _schedules.FirstOrDefault(s => s.Weekday == dateTime.DayOfWeek && s.IsActive);
+        var time = TimeOnly.FromDateTime(dateTime);
+
+        Console.WriteLine($"Checking availability: Day={dateTime.DayOfWeek}, Time={time}, Schedule found={schedule != null}");
+        if (schedule != null)
+        {
+            Console.WriteLine($"Schedule range: {schedule.StartTime} - {schedule.EndTime}");
+            Console.WriteLine($"Is within range: {time >= schedule.StartTime && time <= schedule.EndTime}");
+        }
+
+        return schedule?.ContainsTime(time) == true;
+    }
+
+    /// <summary>
+    /// Adds a review from a patient.
+    /// </summary>
+    public Review AddReview(Patient patient, int rating, string? comment = null)
+    {
+        var review = new Review(this, patient, rating, comment);
+        _reviews.Add(review);
+        return review;
+    }
+
+    /// <summary>
+    /// Updates the consultation price.
+    /// </summary>
+    public void UpdateConsultationPrice(Money newPrice)
     {
         ConsultationPrice = newPrice ?? throw new ArgumentNullValueException(nameof(newPrice));
     }
 
-    public void UpdateCabinet(CabinetNumber newCabinet)
+    /// <summary>
+    /// Updates the cabinet number.
+    /// </summary>
+    public void UpdateCabinetNumber(CabinetNumber newCabinetNumber)
     {
-        CabinetNumber = newCabinet ?? throw new ArgumentNullValueException(nameof(newCabinet));
+        CabinetNumber = newCabinetNumber ?? throw new ArgumentNullValueException(nameof(newCabinetNumber));
+    }
+
+    /// <summary>
+    /// Adds a template for conclusions.
+    /// </summary>
+    public Template AddTemplate(string name, string content)
+    {
+        var template = new Template(this, name, content);
+        _templates.Add(template);
+        return template;
     }
 
     public void Deactivate()
     {
-        if (!IsActive)
-            throw new DoctorAlreadyDeactivatedException(Id);
         IsActive = false;
-    }
-
-    public void Activate()
-    {
-        IsActive = true;
-    }
-
-    public bool IsAvailableAt(DateTime dateTime)
-    {
-        var schedule = _schedules.FirstOrDefault(s => s.Weekday == dateTime.DayOfWeek && s.IsActive);
-        if (schedule == null) return false;
-
-        var time = TimeOnly.FromDateTime(dateTime);
-        return schedule.IsTimeWithinSchedule(time);
     }
 
     internal void AddAppointment(Appointment appointment)
     {
         _appointments.Add(appointment);
-    }
-
-    internal void AddMedicalRecord(MedicalRecord record)
-    {
-        _medicalRecords.Add(record);
-    }
-
-    internal void AddTemplate(Template template)
-    {
-        _templates.Add(template);
-    }
-
-    internal void AddSalary(Salary salary)
-    {
-        _salaries.Add(salary);
-    }
-
-    internal void AddReview(Review review)
-    {
-        _reviews.Add(review);
     }
 }

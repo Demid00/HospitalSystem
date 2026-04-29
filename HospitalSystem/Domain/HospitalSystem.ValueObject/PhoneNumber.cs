@@ -1,10 +1,6 @@
-﻿// PhoneNumber.cs
-using Hospital.ValueObjects.Base;
-using Hospital.ValueObjects.Validators;
+﻿using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Validators;
 
-namespace Hospital.ValueObjects;
+namespace Hospital.Domain.ValueObjects;
 
-public class PhoneNumber : ValueObject<string>
-{
-    public PhoneNumber(string value) : base(new PhoneNumberValidator(), value) { }
-}
+public class PhoneNumber(string value) : ValueObject<string>(new PhoneNumberValidator(), value);

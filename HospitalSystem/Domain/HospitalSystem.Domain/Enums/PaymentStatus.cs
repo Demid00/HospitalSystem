@@ -1,5 +1,4 @@
-﻿// Enums/PaymentStatus.cs
-namespace Hospital.Domain.Enums;
+﻿namespace Hospital.Domain.Enums;
 
 public enum PaymentStatus
 {
