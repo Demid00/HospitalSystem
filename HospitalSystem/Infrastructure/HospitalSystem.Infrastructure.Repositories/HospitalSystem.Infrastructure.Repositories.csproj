@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Domain\HospitalSystem.Domain.Repository.Abstraction\HospitalSystem.Domain.Repository.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Domain\HospitalSystem.Domain\HospitalSystem.Domain.csproj" />
+		<ProjectReference Include="..\HospitalSystem.Infrastructure.EntityFramework\HospitalSystem.Infrastructure.EntityFramework.csproj" />
+	</ItemGroup>
+
+</Project>
