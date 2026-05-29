@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HospitalSystem.Domain.Repository.Abstraction\HospitalSystem.Domain.Repository.Abstraction.csproj" />
+    <ProjectReference Include="..\HospitalSystem.Domain.Repository.Abstraction\HospitalSystem.Domain.Repository.Abstractions.csproj" />
     <ProjectReference Include="..\HospitalSystem.Domain\HospitalSystem.Domain.csproj" />
     <ProjectReference Include="..\HospitalSystem.ValueObject\HospitalSystem.ValueObject.csproj" />
   </ItemGroup>

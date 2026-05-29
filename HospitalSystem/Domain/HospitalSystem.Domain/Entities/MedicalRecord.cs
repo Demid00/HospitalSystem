@@ -4,55 +4,48 @@ using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-/// <summary>
-/// Represents a medical record for an appointment.
-/// </summary>
-public class MedicalRecord : Entity<Guid>
+public class MedicalRecord : AggregateRoot<Guid>
 {
-    private readonly List<PrescribedProcedure> _prescribedProcedures = [];
-
-    public Guid AppointmentId { get; }
-    public Appointment Appointment { get; private set; } = null!;
-    public string Complaints { get; private set; }
-    public string Diagnosis { get; private set; }
-    public string? Treatment { get; private set; }
-    public string? Conclusion { get; private set; }
-    public DateTime CreatedAt { get; }
+    public Guid AppointmentId { get; private set; }
+    public Complaints Complaints { get; private set; }
+    public Diagnosis Diagnosis { get; private set; }
+    public Treatment? Treatment { get; private set; }
+    public Conclusion? Conclusion { get; private set; }
+    public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    private readonly List<PrescribedProcedure> _prescribedProcedures = new();
     public IReadOnlyCollection<PrescribedProcedure> PrescribedProcedures => _prescribedProcedures.AsReadOnly();
 
-    private MedicalRecord() { }
+    private MedicalRecord() { } // для EF
 
-    internal MedicalRecord(Appointment appointment, string complaints, string diagnosis,
-                           string? treatment = null, string? conclusion = null)
+    public MedicalRecord(Guid appointmentId, Complaints complaints, Diagnosis diagnosis,
+                         Treatment? treatment, Conclusion? conclusion, DateTime createdAt)
         : base(Guid.NewGuid())
     {
-        Appointment = appointment ?? throw new ArgumentNullValueException(nameof(appointment));
-        AppointmentId = appointment.Id;
+        AppointmentId = appointmentId;
         Complaints = complaints ?? throw new ArgumentNullValueException(nameof(complaints));
         Diagnosis = diagnosis ?? throw new ArgumentNullValueException(nameof(diagnosis));
         Treatment = treatment;
         Conclusion = conclusion;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
     }
 
-    public void Update(string? complaints, string? diagnosis, string? treatment, string? conclusion)
+    public void AddPrescribedProcedure(string procedureName, string? notes, DateTime now)
     {
-        if (!string.IsNullOrWhiteSpace(complaints))
-            Complaints = complaints;
-        if (!string.IsNullOrWhiteSpace(diagnosis))
-            Diagnosis = diagnosis;
-        if (!string.IsNullOrWhiteSpace(treatment))
-            Treatment = treatment;
-        if (!string.IsNullOrWhiteSpace(conclusion))
-            Conclusion = conclusion;
-        UpdatedAt = DateTime.UtcNow;
+        var procedure = new PrescribedProcedure(Guid.NewGuid(), Id, procedureName, notes);
+        _prescribedProcedures.Add(procedure);
+        UpdatedAt = now;
+        AddDomainEvent(new ProcedurePrescribedEvent(Id, procedureName));
     }
 
-    public void AddProcedure(Procedure procedure, string? notes = null)
+    public void CompleteProcedure(Guid prescribedProcedureId, DateTime completedAt)
     {
-        var prescribed = new PrescribedProcedure(this, procedure, notes);
-        _prescribedProcedures.Add(prescribed);
+        var proc = _prescribedProcedures.FirstOrDefault(p => p.Id == prescribedProcedureId)
+            ?? throw new InvalidOperationException($"Procedure {prescribedProcedureId} not found.");
+        proc.Complete(completedAt);
+        UpdatedAt = completedAt;
     }
 }
+
+public record ProcedurePrescribedEvent(Guid MedicalRecordId, string ProcedureName) : IDomainEvent;

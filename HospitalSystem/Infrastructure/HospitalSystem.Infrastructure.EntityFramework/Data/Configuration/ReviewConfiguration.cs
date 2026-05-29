@@ -1,4 +1,5 @@
 using Hospital.Domain.Entities;
+using Hospital.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,15 +14,16 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.Property(x => x.DoctorId).IsRequired();
         builder.Property(x => x.PatientId).IsRequired();
-        builder.Property(x => x.Rating).IsRequired();
+
+        builder.Property(x => x.Rating)
+            .IsRequired()
+            .HasConversion(r => r.Value, val => new Rating(val));
+
         builder.Property(x => x.Comment).IsRequired(false);
-        builder.Property(x => x.CreatedAt).IsRequired();
+
+        builder.Property(x => x.CreatedAt)
+            .HasConversion(Converters.GetUtcDateTimeConverter());
+
         builder.Property(x => x.IsApproved).IsRequired();
-
-        builder.HasOne(x => x.Doctor).WithMany();
-        builder.HasOne(x => x.Patient).WithMany();
-
-        builder.Navigation(x => x.Doctor).AutoInclude();
-        builder.Navigation(x => x.Patient).AutoInclude();
     }
 }

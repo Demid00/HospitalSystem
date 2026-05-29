@@ -5,80 +5,50 @@ using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-/// <summary>
-/// Represents an appointment between a patient and a doctor.
-/// </summary>
-public class Appointment : Entity<Guid>
+public class Appointment : AggregateRoot<Guid>
 {
-    public Guid PatientId { get; }
-    public Patient Patient { get; private set; } = null!;
-    public Guid DoctorId { get; }
-    public Doctor Doctor { get; private set; } = null!;
-    public DateTime DateTime { get; private set; }
+    public Guid PatientId { get; private set; }
+    public Guid DoctorId { get; private set; }
+    public AppointmentDateTime DateTime { get; private set; }
     public AppointmentStatus Status { get; private set; }
-    public Money Price { get; }
-    public DateTime CreatedAt { get; }
+    public DateTime CreatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
-    public string? CancellationReason { get; private set; }
-
-    public Payment? Payment { get; private set; }
-    public MedicalRecord? MedicalRecord { get; private set; }
+    public CancellationReason? CancellationReason { get; private set; }
 
     private Appointment() { }
 
-    internal Appointment(Patient patient, Doctor doctor, DateTime dateTime, Money price)
+    public Appointment(Guid patientId, Guid doctorId, AppointmentDateTime dateTime, DateTime createdAt)
         : base(Guid.NewGuid())
     {
-        Patient = patient ?? throw new ArgumentNullValueException(nameof(patient));
-        PatientId = patient.Id;
-        Doctor = doctor ?? throw new ArgumentNullValueException(nameof(doctor));
-        DoctorId = doctor.Id;
+        if (patientId == Guid.Empty) throw new ArgumentNullValueException(nameof(patientId));
+        if (doctorId == Guid.Empty) throw new ArgumentNullValueException(nameof(doctorId));
+        PatientId = patientId;
+        DoctorId = doctorId;
         DateTime = dateTime;
-        Price = price ?? throw new ArgumentNullValueException(nameof(price));
+        CreatedAt = createdAt;
         Status = AppointmentStatus.Booked;
-        CreatedAt = DateTime.UtcNow;
     }
 
-    internal bool SetCancel(string? reason = null)
+    public void Cancel(CancellationReason? reason, DateTime cancelledAt)
     {
         if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCancelledException(Id, Status.ToString());
-
+            throw new AppointmentCannotBeCancelledException(Id, Status);
         Status = AppointmentStatus.Cancelled;
-        CancelledAt = DateTime.UtcNow;
+        CancelledAt = cancelledAt;
         CancellationReason = reason;
-        return true;
+        AddDomainEvent(new AppointmentCancelledEvent(Id, reason?.Value));
     }
 
-    internal bool SetComplete()
+    public void Complete(DateTime completedAt)
     {
         if (Status != AppointmentStatus.Booked)
-            throw new AppointmentCannotBeCompletedException(Id, Status.ToString());
-
+            throw new AppointmentCannotBeCompletedException(Id, Status);
         Status = AppointmentStatus.Completed;
-        CompletedAt = DateTime.UtcNow;
-        return true;
-    }
-
-    internal Payment AddPayment(Money amount, string transactionId)
-    {
-        if (Payment != null)
-            throw new InvalidOperationException($"Payment already exists for appointment {Id}");
-
-        var payment = new Payment(this, amount, transactionId);
-        Payment = payment;
-        return payment;
-    }
-
-    internal MedicalRecord AddMedicalRecord(string complaints, string diagnosis,
-                                            string? treatment = null, string? conclusion = null)
-    {
-        if (MedicalRecord != null)
-            throw new InvalidOperationException($"Medical record already exists for appointment {Id}");
-
-        var record = new MedicalRecord(this, complaints, diagnosis, treatment, conclusion);
-        MedicalRecord = record;
-        return record;
+        CompletedAt = completedAt;
+        AddDomainEvent(new AppointmentCompletedEvent(Id));
     }
 }
+
+public record AppointmentCancelledEvent(Guid AppointmentId, string? Reason) : IDomainEvent;
+public record AppointmentCompletedEvent(Guid AppointmentId) : IDomainEvent;

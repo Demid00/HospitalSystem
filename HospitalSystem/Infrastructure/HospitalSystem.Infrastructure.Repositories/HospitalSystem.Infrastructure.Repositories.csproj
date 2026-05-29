@@ -11,7 +11,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Domain\HospitalSystem.Domain.Repository.Abstraction\HospitalSystem.Domain.Repository.Abstraction.csproj" />
+		<ProjectReference Include="..\..\Domain\HospitalSystem.Domain.Repository.Abstraction\HospitalSystem.Domain.Repository.Abstractions.csproj" />
 		<ProjectReference Include="..\..\Domain\HospitalSystem.Domain\HospitalSystem.Domain.csproj" />
 		<ProjectReference Include="..\HospitalSystem.Infrastructure.EntityFramework\HospitalSystem.Infrastructure.EntityFramework.csproj" />
 	</ItemGroup>

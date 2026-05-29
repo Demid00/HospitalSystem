@@ -16,7 +16,7 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(x => x.Name)
             .IsRequired()
             .HasConversion(name => name.Value, str => new FullName(str))
-            .HasMaxLength(FullNameValidator.MAX_LENGTH);
+            .HasMaxLength(FullNameValidator.MaxLength);
 
         builder.Property(x => x.Email)
             .IsRequired()
@@ -27,18 +27,18 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
             .HasConversion(phone => phone.Value, str => new PhoneNumber(str));
 
         builder.Property(x => x.BirthDate).IsRequired();
-        builder.Property(x => x.InsurancePolicy).IsRequired(false);
+
+        builder.Property(x => x.InsurancePolicy)
+            .IsRequired(false)
+            .HasConversion(
+                policy => policy != null ? policy.Value : null,
+                str => str != null ? new InsurancePolicy(str) : null
+            );
+
         builder.Property(x => x.Allergies).IsRequired(false);
         builder.Property(x => x.IsActive).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
 
-        builder.HasMany<Appointment>("_appointments")
-            .WithOne()
-            .HasForeignKey("PatientId")
-            .HasPrincipalKey(x => x.Id);
-
-        builder.Ignore(x => x.Appointments);
-        builder.Ignore(x => x.HasActiveAppointments);
-        builder.Ignore(x => x.TotalSpent);
+        builder.Property(x => x.CreatedAt)
+            .HasConversion(Converters.GetUtcDateTimeConverter());
     }
 }

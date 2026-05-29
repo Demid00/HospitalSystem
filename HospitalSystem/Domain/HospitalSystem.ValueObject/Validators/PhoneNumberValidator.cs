@@ -1,6 +1,6 @@
-﻿using Hospital.Domain.ValueObjects.Base;
-using HospitalSystem.Domain.ValueObjects.Exceptions;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using Hospital.Domain.ValueObjects.Base;
+using Hospital.Domain.ValueObjects.Exceptions;
 
 namespace Hospital.Domain.ValueObjects.Validators;
 
@@ -13,10 +13,9 @@ public class PhoneNumberValidator : IValidator<string>
     public void Validate(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentNullOrWhiteSpaceException(nameof(value));
-
-        var cleanNumber = Regex.Replace(value, @"[\s\-\(\)]", "");
-        if (cleanNumber.Length < 10 || cleanNumber.Length > 12 || !PhoneRegex.IsMatch(value))
+            throw new EmptyValueException(nameof(PhoneNumber));
+        var clean = Regex.Replace(value, @"[\s\-\(\)]", "");
+        if (clean.Length < 10 || clean.Length > 12 || !PhoneRegex.IsMatch(value))
             throw new InvalidPhoneNumberFormatException(value);
     }
 }

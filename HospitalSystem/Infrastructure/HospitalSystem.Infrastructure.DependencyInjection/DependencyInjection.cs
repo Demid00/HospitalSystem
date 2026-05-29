@@ -18,9 +18,12 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        // Регистрация репозиториев
         services.AddScoped<IPatientRepository, EfPatientRepository>();
         services.AddScoped<IDoctorRepository, EfDoctorRepository>();
         services.AddScoped<IMedicalRecordRepository, EfMedicalRecordRepository>();
+        services.AddScoped<IAppointmentRepository, EfAppointmentRepository>();
+        services.AddScoped<IReviewRepository, EfReviewRepository>();
 
         return services;
     }

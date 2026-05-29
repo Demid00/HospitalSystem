@@ -1,12 +1,9 @@
-﻿namespace HospitalSystem.Domain.ValueObjects.Exceptions;
+﻿namespace Hospital.Domain.ValueObjects.Exceptions;
 
-/// <summary>
-/// The exception that is thrown when no validation method is specified for the type.
-/// </summary>
-public class ValidatorNullException : ArgumentNullException
+public class ValidatorNullException : ValueObjectException
 {
     public ValidatorNullException(string typeFullName)
-        : base("validator", $"Validator must be specified for type '{typeFullName}'")
+        : base($"Validator must be specified for type '{typeFullName}'")
     {
     }
 }

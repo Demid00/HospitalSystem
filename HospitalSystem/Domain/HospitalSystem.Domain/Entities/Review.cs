@@ -4,41 +4,33 @@ using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-/// <summary>
-/// Represents a review of a doctor by a patient.
-/// </summary>
-public class Review : Entity<Guid>
+public class Review : AggregateRoot<Guid>
 {
-    public Guid DoctorId { get; }
-    public Doctor Doctor { get; private set; } = null!;
-    public Guid PatientId { get; }
-    public Patient Patient { get; private set; } = null!;
-    public int Rating { get; }
-    public string? Comment { get; }
-    public DateTime CreatedAt { get; }
+    public Guid DoctorId { get; private set; }
+    public Guid PatientId { get; private set; }
+    public Rating Rating { get; private set; }
+    public string? Comment { get; private set; }
+    public DateTime CreatedAt { get; private set; }
     public bool IsApproved { get; private set; }
 
     private Review() { }
 
-    internal Review(Doctor doctor, Patient patient, int rating, string? comment = null)
+    public Review(Guid doctorId, Guid patientId, Rating rating, string? comment, DateTime createdAt)
         : base(Guid.NewGuid())
     {
-        Doctor = doctor ?? throw new ArgumentNullValueException(nameof(doctor));
-        DoctorId = doctor.Id;
-        Patient = patient ?? throw new ArgumentNullValueException(nameof(patient));
-        PatientId = patient.Id;
-
-        if (rating < 1 || rating > 5)
-            throw new InvalidRatingException(rating);
-
-        Rating = rating;
+        DoctorId = doctorId;
+        PatientId = patientId;
+        Rating = rating ?? throw new ArgumentNullValueException(nameof(rating));
         Comment = comment;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
         IsApproved = false;
     }
 
     public void Approve()
     {
         IsApproved = true;
+        AddDomainEvent(new ReviewApprovedEvent(Id));
     }
 }
+
+public record ReviewApprovedEvent(Guid ReviewId) : IDomainEvent;

@@ -1,40 +1,30 @@
 ﻿using Hospital.Domain.Base;
 using Hospital.Domain.Exceptions;
+using Hospital.Domain.ValueObjects;
 
 namespace Hospital.Domain.Entities;
 
-/// <summary>
-/// Represents a procedure prescribed to a patient.
-/// </summary>
 public class PrescribedProcedure : Entity<Guid>
 {
-    public Guid MedicalRecordId { get; }
-    public MedicalRecord MedicalRecord { get; private set; } = null!;
-    public Guid ProcedureId { get; }
-    public Procedure Procedure { get; private set; } = null!;
+    public Guid MedicalRecordId { get; private set; }
+    public string ProcedureName { get; private set; }
     public string? Notes { get; private set; }
     public bool IsCompleted { get; private set; }
     public DateTime? CompletedAt { get; private set; }
 
-    private PrescribedProcedure() { }
+    private PrescribedProcedure() { } // для EF
 
-    internal PrescribedProcedure(MedicalRecord medicalRecord, Procedure procedure, string? notes = null)
-        : base(Guid.NewGuid())
+    internal PrescribedProcedure(Guid id, Guid medicalRecordId, string procedureName, string? notes)
+        : base(id)
     {
-        MedicalRecord = medicalRecord ?? throw new ArgumentNullValueException(nameof(medicalRecord));
-        MedicalRecordId = medicalRecord.Id;
-        Procedure = procedure ?? throw new ArgumentNullValueException(nameof(procedure));
-        ProcedureId = procedure.Id;
+        MedicalRecordId = medicalRecordId;
+        ProcedureName = procedureName ?? throw new ArgumentNullValueException(nameof(procedureName));
         Notes = notes;
-        IsCompleted = false;
     }
 
-    public void Complete()
+    internal void Complete(DateTime completedAt)
     {
-        if (IsCompleted)
-            throw new InvalidOperationException($"Procedure {Id} is already completed");
-
         IsCompleted = true;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = completedAt;
     }
 }

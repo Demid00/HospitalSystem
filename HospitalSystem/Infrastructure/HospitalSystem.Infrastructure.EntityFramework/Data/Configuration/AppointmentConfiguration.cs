@@ -1,4 +1,5 @@
 using Hospital.Domain.Entities;
+using Hospital.Domain.Enums;
 using Hospital.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,28 +16,29 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.Property(x => x.PatientId).IsRequired();
         builder.Property(x => x.DoctorId).IsRequired();
 
-        builder.Property(x => x.DateTime).IsRequired()
+        // Исправленный конвертер: сначала преобразуем AppointmentDateTime в DateTime (с нормализацией UTC),
+        // затем из БД читаем DateTime и создаём AppointmentDateTime (тоже с нормализацией)
+        builder.Property(x => x.DateTime)
             .HasConversion(
-                src => src.Kind == DateTimeKind.Utc ? src : DateTime.SpecifyKind(src, DateTimeKind.Utc),
-                dst => dst.Kind == DateTimeKind.Utc ? dst : DateTime.SpecifyKind(dst, DateTimeKind.Utc)
+                dt => dt.Value.Kind == DateTimeKind.Utc ? dt.Value : DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc),
+                val => new AppointmentDateTime(DateTime.SpecifyKind(val, DateTimeKind.Utc))
             );
 
-        builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.Price)
+        builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion(price => price.Value, val => new Money(val));
+            .HasConversion<string>();
 
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.CompletedAt).IsRequired(false);
-        builder.Property(x => x.CancelledAt).IsRequired(false);
-        builder.Property(x => x.CancellationReason).IsRequired(false);
+        builder.Property(x => x.CreatedAt)
+            .HasConversion(Converters.GetUtcDateTimeConverter());
 
-        builder.HasOne(x => x.Patient).WithMany();
-        builder.HasOne(x => x.Doctor).WithMany();
-        builder.HasOne(x => x.Payment).WithOne().HasForeignKey<Payment>("AppointmentId");
-        builder.HasOne(x => x.MedicalRecord).WithOne().HasForeignKey<MedicalRecord>("AppointmentId");
+        builder.Property(x => x.CompletedAt)
+            .HasConversion(Converters.GetNullableUtcDateTimeConverter());
 
-        builder.Navigation(x => x.Patient).AutoInclude();
-        builder.Navigation(x => x.Doctor).AutoInclude();
+        builder.Property(x => x.CancelledAt)
+            .HasConversion(Converters.GetNullableUtcDateTimeConverter());
+
+        builder.Property(x => x.CancellationReason)
+            .IsRequired(false)
+            .HasConversion(r => r != null ? r.Value : null, str => str != null ? new CancellationReason(str) : null);
     }
 }
